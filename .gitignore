@@ -1,0 +1,11 @@
+# live data: sales, stock and cash drawer
+*.db
+*.db-journal
+backups/
+
+# secrets (the cloud password goes in Streamlit Cloud's Secrets settings instead)
+.streamlit/secrets.toml
+
+__pycache__/
+*.pyc
+.DS_Store

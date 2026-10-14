@@ -1,0 +1,147 @@
+sku,product,category,qty,buy_price,buy_amount,sell_price,sell_amount,profit,new,image
+TGA-001,Rings,Rings,23,50.0,1150.0,150.0,3450.0,2300.0,True,images/TGA-001.jpg
+TGA-002,rings(16),Rings,10,165.0,1650.0,250.0,2500.0,850.0,False,images/TGA-002.jpg
+TGA-003,rings(17),Rings,8,165.0,1320.0,250.0,2000.0,680.0,False,images/TGA-003.jpg
+TGA-004,Adjustable rings,Rings,10,95.0,950.0,150.0,1500.0,550.0,False,images/TGA-004.jpg
+TGA-005,Stone rings,Rings,5,140.0,700.0,250.0,1250.0,550.0,True,images/TGA-005.jpg
+TGA-006,clove ring,Rings,1,220.0,220.0,300.0,300.0,80.0,True,images/TGA-006.jpg
+TGA-007,charms bracelet,Bracelets,8,180.0,1440.0,270.0,2160.0,720.0,False,images/TGA-007.jpg
+TGA-008,heart chain,Necklaces,1,160.0,160.0,280.0,280.0,120.0,False,images/TGA-008.jpg
+TGA-009,white gem necklace,Necklaces,1,190.0,190.0,320.0,320.0,130.0,False,images/TGA-009.jpg
+TGA-010,pointed heart,Necklaces,3,150.0,450.0,250.0,750.0,300.0,False,images/TGA-010.jpg
+TGA-011,Dainty heart necklace,Necklaces,2,130.0,260.0,250.0,500.0,240.0,False,images/TGA-011.jpg
+TGA-012,Butterfly necklace,Necklaces,2,130.0,260.0,250.0,500.0,240.0,False,images/TGA-012.jpg
+TGA-013,Multi gem snake chain,Necklaces,1,160.0,160.0,280.0,280.0,120.0,False,images/TGA-013.jpg
+TGA-014,Dainty Multi gem (circles),Necklaces,1,190.0,190.0,320.0,320.0,130.0,False,images/TGA-014.jpg
+TGA-015,Dainty white gem (circles),Necklaces,2,190.0,380.0,320.0,640.0,260.0,False,images/TGA-015.jpg
+TGA-016,multi gem necklace,Necklaces,1,200.0,200.0,320.0,320.0,120.0,False,images/TGA-016.jpg
+TGA-017,Heart Solitair,Necklaces,4,145.0,580.0,250.0,1000.0,420.0,False,images/TGA-017.jpg
+TGA-018,solitair pendant,Necklaces,1,145.0,145.0,250.0,250.0,105.0,False,images/TGA-018.jpg
+TGA-019,clove pendant,Necklaces,2,115.0,230.0,250.0,500.0,270.0,False,images/TGA-019.jpg
+TGA-020,white reversible,Necklaces,2,140.0,280.0,260.0,520.0,240.0,False,images/TGA-020.jpg
+TGA-021,black reversible,Necklaces,2,140.0,280.0,260.0,520.0,240.0,False,images/TGA-021.jpg
+TGA-022,golden big heart,Necklaces,1,150.0,150.0,230.0,230.0,80.0,False,images/TGA-022.jpg
+TGA-023,golden small heart,Necklaces,1,150.0,150.0,230.0,230.0,80.0,False,images/TGA-023.jpg
+TGA-024,white pearl,Necklaces,1,140.0,140.0,250.0,250.0,110.0,False,images/TGA-024.jpg
+TGA-025,bow pendant,Necklaces,1,145.0,145.0,250.0,250.0,105.0,False,images/TGA-025.jpg
+TGA-026,pink charms pendant,Necklaces,2,195.0,390.0,300.0,600.0,210.0,False,images/TGA-026.jpg
+TGA-027,2 layer bamboo bracelet,Bracelets,1,185.0,185.0,280.0,280.0,95.0,False,images/TGA-027.jpg
+TGA-028,cross bamboo bracelet,Bracelets,2,180.0,360.0,280.0,560.0,200.0,False,images/TGA-028.jpg
+TGA-029,evil eye,Bracelets,1,220.0,220.0,280.0,280.0,60.0,False,images/TGA-029.jpg
+TGA-030,Blossom Cuff,Bracelets,1,300.0,300.0,350.0,350.0,50.0,False,images/TGA-030.jpg
+TGA-031,cartier,Bracelets,7,215.0,1505.0,280.0,1960.0,455.0,False,images/TGA-031.jpg
+TGA-032,white pearl cuff,Bracelets,1,215.0,215.0,280.0,280.0,65.0,False,images/TGA-032.jpg
+TGA-033,plain bangle,Bracelets,1,215.0,215.0,250.0,250.0,35.0,False,images/TGA-033.jpg
+TGA-034,white heart baby bangle,Bracelets,1,215.0,215.0,280.0,280.0,65.0,False,images/TGA-034.jpg
+TGA-035,nani wale kade,Bracelets,2,210.0,420.0,250.0,500.0,80.0,False,images/TGA-035.jpg
+TGA-036,white leaf,Bracelets,1,215.0,215.0,320.0,320.0,105.0,True,images/TGA-036.jpg
+TGA-037,white gem kada,Bracelets,2,215.0,430.0,320.0,640.0,210.0,True,images/TGA-037.jpg
+TGA-038,pink gem kada,Bracelets,2,215.0,430.0,320.0,640.0,210.0,True,images/TGA-038.jpg
+TGA-039,pink heart,Bracelets,1,215.0,215.0,280.0,280.0,65.0,True,images/TGA-039.jpg
+TGA-040,sleek white circle kada,Bracelets,2,215.0,430.0,280.0,560.0,130.0,True,images/TGA-040.jpg
+TGA-041,dual band heart kada,Bracelets,2,215.0,430.0,300.0,600.0,170.0,True,images/TGA-041.jpg
+TGA-042,check square kada,Bracelets,2,215.0,430.0,280.0,560.0,130.0,True,images/TGA-042.jpg
+TGA-043,Black clover,Bracelets,5,100.0,500.0,180.0,900.0,400.0,False,images/TGA-043.jpg
+TGA-044,White clover,Bracelets,4,100.0,400.0,180.0,720.0,320.0,False,images/TGA-044.jpg
+TGA-045,B-W clover,Bracelets,4,100.0,400.0,180.0,720.0,320.0,False,images/TGA-045.jpg
+TGA-046,golden clover,Bracelets,2,70.0,140.0,180.0,360.0,220.0,False,images/TGA-046.jpg
+TGA-047,triple layer,Bracelets,3,180.0,540.0,280.0,840.0,300.0,False,images/TGA-047.jpg
+TGA-048,double layer,Bracelets,1,180.0,180.0,260.0,260.0,80.0,False,images/TGA-048.jpg
+TGA-049,white heart,Bracelets,1,130.0,130.0,280.0,280.0,150.0,False,images/TGA-049.jpg
+TGA-050,star-circle,Bracelets,1,185.0,185.0,280.0,280.0,95.0,False,images/TGA-050.jpg
+TGA-051,hand chain,Bracelets,1,180.0,180.0,280.0,280.0,100.0,False,images/TGA-051.jpg
+TGA-052,white flower,Bracelets,3,160.0,480.0,260.0,780.0,300.0,False,images/TGA-052.jpg
+TGA-053,pink heart Charm Bracelet,Bracelets,2,180.0,360.0,250.0,500.0,140.0,False,images/TGA-053.jpg
+TGA-054,Hexcagon bracelet,Bracelets,1,160.0,160.0,260.0,260.0,100.0,False,images/TGA-054.jpg
+TGA-055,Dainty Bracelet,Bracelets,1,190.0,190.0,260.0,260.0,70.0,False,images/TGA-055.jpg
+TGA-056,triple heart,Bracelets,1,180.0,180.0,260.0,260.0,80.0,False,images/TGA-056.jpg
+TGA-057,heart-circle,Bracelets,1,180.0,180.0,260.0,260.0,80.0,False,images/TGA-057.jpg
+TGA-058,white oval,Bracelets,1,180.0,180.0,280.0,280.0,100.0,False,images/TGA-058.jpg
+TGA-059,multi gem oval,Bracelets,1,180.0,180.0,280.0,280.0,100.0,False,images/TGA-059.jpg
+TGA-060,tennis bracelet(gold),Bracelets,2,135.0,270.0,280.0,560.0,290.0,True,images/TGA-060.jpg
+TGA-061,tennis bracelet(silver),Bracelets,2,135.0,270.0,280.0,560.0,290.0,True,images/TGA-061.jpg
+TGA-062,lotus bracelet,Bracelets,1,190.0,190.0,250.0,250.0,60.0,True,images/TGA-062.jpg
+TGA-063,snake+heart dual,Bracelets,2,165.0,330.0,280.0,560.0,230.0,True,images/TGA-063.jpg
+TGA-064,green stone dainty,Bracelets,2,160.0,320.0,250.0,500.0,180.0,True,images/TGA-064.jpg
+TGA-065,clover pearl,Bracelets,2,155.0,310.0,250.0,500.0,190.0,True,images/TGA-065.jpg
+TGA-066,rose charm,Bracelets,1,180.0,180.0,250.0,250.0,70.0,True,images/TGA-066.jpg
+TGA-067,star earring,Western Earrings,2,70.0,140.0,180.0,360.0,220.0,True,images/TGA-067.jpg
+TGA-068,flower earring,Western Earrings,2,70.0,140.0,210.0,420.0,280.0,True,images/TGA-068.jpg
+TGA-069,circle chunky,Western Earrings,2,70.0,140.0,180.0,360.0,220.0,True,images/TGA-069.jpg
+TGA-070,thin link earring,Western Earrings,2,110.0,220.0,230.0,460.0,240.0,True,images/TGA-070.jpg
+TGA-071,rectangle hoops,Western Earrings,3,125.0,375.0,250.0,750.0,375.0,True,images/TGA-071.jpg
+TGA-072,link earrings,Western Earrings,4,160.0,640.0,250.0,1000.0,360.0,True,images/TGA-072.jpg
+TGA-073,green hoops,Western Earrings,1,160.0,160.0,260.0,260.0,100.0,True,images/TGA-073.jpg
+TGA-074,circle loop small,Western Earrings,2,145.0,290.0,220.0,440.0,150.0,True,images/TGA-074.jpg
+TGA-075,circular hoop,Western Earrings,2,180.0,360.0,250.0,500.0,140.0,True,images/TGA-075.jpg
+TGA-076,heart pearl,Western Earrings,1,190.0,190.0,280.0,280.0,90.0,True,images/TGA-076.jpg
+TGA-077,white butterfly,Western Earrings,2,100.0,200.0,210.0,420.0,220.0,False,images/TGA-077.jpg
+TGA-078,green butterfly,Western Earrings,2,100.0,200.0,210.0,420.0,220.0,False,images/TGA-078.jpg
+TGA-079,cherry,Western Earrings,1,150.0,150.0,250.0,250.0,100.0,False,images/TGA-079.jpg
+TGA-080,blue dangler,Western Earrings,1,180.0,180.0,260.0,260.0,80.0,False,images/TGA-080.jpg
+TGA-081,tiny bow,Western Earrings,2,70.0,140.0,150.0,300.0,160.0,False,images/TGA-081.jpg
+TGA-082,white heart dangler,Western Earrings,2,185.0,370.0,280.0,560.0,190.0,False,images/TGA-082.jpg
+TGA-083,green heart dangler,Western Earrings,3,185.0,555.0,280.0,840.0,285.0,False,images/TGA-083.jpg
+TGA-084,star hoop,Western Earrings,2,115.0,230.0,200.0,400.0,170.0,False,images/TGA-084.jpg
+TGA-085,heart in heart,Western Earrings,1,110.0,110.0,250.0,250.0,140.0,False,images/TGA-085.jpg
+TGA-086,pointed heart,Western Earrings,1,100.0,100.0,220.0,220.0,120.0,False,images/TGA-086.jpg
+TGA-087,bow heart,Western Earrings,1,160.0,160.0,260.0,260.0,100.0,False,images/TGA-087.jpg
+TGA-088,wavy chuny,Western Earrings,2,160.0,320.0,260.0,520.0,200.0,False,images/TGA-088.jpg
+TGA-089,heart chunky,Western Earrings,1,175.0,175.0,260.0,260.0,85.0,False,images/TGA-089.jpg
+TGA-090,double heart dangler,Western Earrings,2,120.0,240.0,260.0,520.0,280.0,False,images/TGA-090.jpg
+TGA-091,bold hoops,Western Earrings,1,90.0,90.0,250.0,250.0,160.0,False,images/TGA-091.jpg
+TGA-092,bold wavy hoops,Western Earrings,1,145.0,145.0,280.0,280.0,135.0,False,images/TGA-092.jpg
+TGA-093,double pointed heart dangler,Western Earrings,1,170.0,170.0,280.0,280.0,110.0,False,images/TGA-093.jpg
+TGA-094,bow earrings,Western Earrings,1,145.0,145.0,250.0,250.0,105.0,False,images/TGA-094.jpg
+TGA-095,small eaveryday,Western Earrings,15,80.0,1200.0,200.0,3000.0,1800.0,False,images/TGA-095.jpg
+TGA-096,double hoop,Western Earrings,1,195.0,195.0,250.0,250.0,55.0,False,images/TGA-096.jpg
+TGA-097,kinda circlular hoops,Western Earrings,1,195.0,195.0,250.0,250.0,55.0,False,images/TGA-097.jpg
+TGA-098,rectangel hoops,Western Earrings,1,195.0,195.0,250.0,250.0,55.0,False,images/TGA-098.jpg
+TGA-099,Bling stone hoops,Western Earrings,1,250.0,250.0,250.0,250.0,0.0,False,images/TGA-099.jpg
+TGA-100,triple heart dnagler,Western Earrings,1,195.0,195.0,250.0,250.0,55.0,False,images/TGA-100.jpg
+TGA-101,white earrings,Ethnic Earrings,1,380.0,380.0,500.0,500.0,120.0,False,images/TGA-101.jpg
+TGA-102,pink kashmere long,Ethnic Earrings,1,570.0,570.0,750.0,750.0,180.0,False,images/TGA-102.jpg
+TGA-103,mint jhumka,Ethnic Earrings,1,410.0,410.0,600.0,600.0,190.0,False,images/TGA-103.jpg
+TGA-104,pink-mint  earring,Ethnic Earrings,2,375.0,750.0,650.0,1300.0,550.0,False,images/TGA-104.jpg
+TGA-105,pink chandbali kashmere jhumka,Ethnic Earrings,1,480.0,480.0,700.0,700.0,220.0,False,images/TGA-105.jpg
+TGA-106,red kashmere jhumka,Ethnic Earrings,1,340.0,340.0,500.0,500.0,160.0,False,images/TGA-106.jpg
+TGA-107,green set,Ethnic Earrings,1,1190.0,1190.0,2000.0,2000.0,810.0,False,images/TGA-107.jpg
+TGA-108,green lotus jhumka,Ethnic Earrings,1,240.0,240.0,450.0,450.0,210.0,False,images/TGA-108.jpg
+TGA-109,green pearl earring,Ethnic Earrings,1,240.0,240.0,400.0,400.0,160.0,False,images/TGA-109.jpg
+TGA-110,kaan chains,Ethnic Earrings,2,250.0,500.0,420.0,840.0,340.0,False,images/TGA-110.jpg
+TGA-111,watches,Watches,6,360.0,2160.0,600.0,3600.0,1440.0,False,images/TGA-111.jpg
+TGA-112,doublet stone drop,Ethnic Earrings,5,270.0,1350.0,450.0,2250.0,900.0,True,images/TGA-112.jpg
+TGA-113,statement brass diamond replica,Ethnic Earrings,2,910.0,1820.0,1200.0,2400.0,580.0,True,images/TGA-113.jpg
+TGA-114,statment polki,Ethnic Earrings,4,490.0,1960.0,750.0,3000.0,1040.0,True,images/TGA-114.jpg
+TGA-115,karat mossainite polki,Ethnic Earrings,2,280.0,560.0,400.0,800.0,240.0,True,images/TGA-115.jpg
+TGA-116,karat mossainite c shaped,Ethnic Earrings,1,385.0,385.0,500.0,500.0,115.0,True,images/TGA-116.jpg
+TGA-117,kashmiri earring,Ethnic Earrings,1,520.0,520.0,750.0,750.0,230.0,True,images/TGA-117.jpg
+TGA-118,brass sabya inspired,Ethnic Earrings,3,550.0,1650.0,800.0,2400.0,750.0,True,images/TGA-118.jpg
+TGA-119,PINK /ROYAL BLUE,Ethnic Earrings,2,475.0,950.0,750.0,1500.0,550.0,True,images/TGA-119.jpg
+TGA-120,SMALL EARRING,Ethnic Earrings,0,475.0,0.0,600.0,0.0,0.0,True,images/TGA-120.jpg
+TGA-121,LONG KASHMIRI,Ethnic Earrings,2,690.0,1380.0,1000.0,2000.0,620.0,True,images/TGA-121.jpg
+TGA-122,white stone kada,Bracelets,2,275.0,550.0,320.0,640.0,90.0,True,images/TGA-122.jpg
+TGA-123,links kada,Bracelets,1,225.0,225.0,300.0,300.0,75.0,True,images/TGA-123.jpg
+TGA-124,black bangles,Bracelets,1,225.0,225.0,320.0,320.0,95.0,True,images/TGA-124.jpg
+TGA-125,bangles,Bracelets,1,250.0,250.0,320.0,320.0,70.0,True,images/TGA-125.jpg
+TGA-126,dainty white earrings,Western Earrings,2,195.0,390.0,280.0,560.0,170.0,True,images/TGA-126.jpg
+TGA-127,earrings- dangler hoops,Western Earrings,1,220.0,220.0,300.0,300.0,80.0,True,images/TGA-127.jpg
+TGA-128,earrings - square dangler,Western Earrings,1,165.0,165.0,260.0,260.0,95.0,True,images/TGA-128.jpg
+TGA-129,bracelet,Bracelets,12,40.0,480.0,60.0,720.0,240.0,False,images/TGA-129.jpg
+TGA-130,diet coke bag charm,Bag & Phone Charms,6,50.0,300.0,100.0,600.0,300.0,False,images/TGA-130.jpg
+TGA-131,tuplip phone charm,Bag & Phone Charms,6,25.0,150.0,100.0,600.0,450.0,False,images/TGA-131.jpg
+TGA-132,mixed ohone charm,Bag & Phone Charms,6,65.0,390.0,100.0,600.0,210.0,False,images/TGA-132.jpg
+TGA-133,heart bag charm,Bag & Phone Charms,6,100.0,600.0,150.0,900.0,300.0,False,images/TGA-133.jpg
+TGA-134,cupcake bag charm,Bag & Phone Charms,6,50.0,300.0,100.0,600.0,300.0,False,images/TGA-134.jpg
+TGA-135,bow phone charm,Bag & Phone Charms,6,30.0,180.0,100.0,600.0,420.0,False,images/TGA-135.jpg
+TGA-136,bow phone charm (2),Bag & Phone Charms,6,30.0,180.0,100.0,600.0,420.0,False,images/TGA-136.jpg
+TGA-137,star phone charm,Bag & Phone Charms,6,30.0,180.0,100.0,600.0,420.0,False,images/TGA-137.jpg
+TGA-138,pink bow charm,Bag & Phone Charms,6,50.0,300.0,100.0,600.0,300.0,False,images/TGA-138.jpg
+TGA-139,black white pendant,Necklaces,1,145.0,145.0,0.0,0.0,-145.0,True,images/TGA-139.jpg
+TGA-140,small flower pendant,Necklaces,1,145.0,145.0,0.0,0.0,-145.0,True,images/TGA-140.jpg
+TGA-141,pendant - gold bar,Necklaces,1,145.0,145.0,0.0,0.0,-145.0,True,images/TGA-141.jpg
+TGA-142,pendant - studed heart,Necklaces,1,145.0,145.0,0.0,0.0,-145.0,True,images/TGA-142.jpg
+TGA-143,charms pendants,Necklaces,4,165.0,660.0,300.0,1200.0,540.0,True,images/TGA-143.jpg
+TGA-144,pendants - black bar,Necklaces,1,155.0,155.0,0.0,0.0,-155.0,True,images/TGA-144.jpg
+TGA-145,pendants- white bar,Necklaces,1,155.0,155.0,0.0,0.0,-155.0,True,images/TGA-145.jpg
+TGA-146,pendants- evil eye,Necklaces,1,155.0,155.0,0.0,0.0,-155.0,True,images/TGA-146.jpg

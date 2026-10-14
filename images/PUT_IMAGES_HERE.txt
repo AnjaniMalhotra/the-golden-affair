@@ -1,0 +1,3 @@
+Add your product photos here using the matching SKU filename.
+Examples: TGA-001.jpg, TGA-002.jpg, TGA-003.jpg
+You can use JPG or PNG; if using PNG, change the image filename in inventory.csv accordingly.
