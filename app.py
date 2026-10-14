@@ -2,15 +2,17 @@
 import streamlit as st
 import pandas as pd
 import sqlite3
-import base64, html, io, re, shutil
+import base64, html, io, json, re, threading
 from pathlib import Path
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from PIL import Image, ImageOps
 import uuid
 
 APP_DIR = Path(__file__).parent
 CSV_PATH = APP_DIR / "inventory.csv"
 DB_PATH = APP_DIR / "golden_affair.db"
+TZ = ZoneInfo("Asia/Kolkata")   # cloud servers run on UTC; bills should carry Indian time
 IMG_DIR = APP_DIR / "images"
 PAYMENTS = ["UPI","Cash","Card","Other"]
 LOW_STOCK = 2
@@ -110,11 +112,11 @@ div.stButton > button, div.stDownloadButton > button { border-radius:10px; min-h
 </style>
 """, unsafe_allow_html=True)
 
+# Optional lock for a hosted copy: set app_password in the Streamlit Cloud secrets to require it.
 def app_password():
     try: return st.secrets.get("app_password")
-    except Exception: return None   # no secrets file when running locally
+    except Exception: return None
 
-# Optional lock for a hosted copy: set app_password in the Streamlit Cloud secrets to require it.
 if app_password() and not st.session_state.get("unlocked"):
     st.markdown('<div class="brand" style="margin-top:40px">The Golden Affair</div>'
                 '<div class="sub">Exhibition counter</div>',unsafe_allow_html=True)
@@ -127,24 +129,99 @@ if app_password() and not st.session_state.get("unlocked"):
             st.error("Wrong password")
     st.stop()
 
-def connect():
-    c = sqlite3.connect(DB_PATH, check_same_thread=False)
-    c.execute("""CREATE TABLE IF NOT EXISTS inventory(
-        sku TEXT PRIMARY KEY, product TEXT, category TEXT, qty INTEGER,
-        buy_price REAL, sell_price REAL, image TEXT, new INTEGER DEFAULT 0)""")
-    c.execute("""CREATE TABLE IF NOT EXISTS sales(
-        order_id TEXT PRIMARY KEY, created_at TEXT, payment_method TEXT,
-        subtotal REAL, discount REAL, total REAL, cost REAL, profit REAL)""")
-    c.execute("""CREATE TABLE IF NOT EXISTS sale_items(
-        order_id TEXT, sku TEXT, product TEXT, qty INTEGER,
-        sell_price REAL, buy_price REAL, line_total REAL, line_profit REAL)""")
-    c.execute("CREATE TABLE IF NOT EXISTS cash_drawer(denom INTEGER PRIMARY KEY, count INTEGER NOT NULL DEFAULT 0)")
-    # one row per denomination moved in a sale: delta > 0 received from customer, delta < 0 given as change
-    c.execute("CREATE TABLE IF NOT EXISTS cash_moves(order_id TEXT, denom INTEGER, delta INTEGER)")
-    c.commit()
-    return c
+def secret(name):
+    try: return st.secrets.get(name)
+    except Exception: return None   # no secrets file when running locally
 
-conn = connect()
+class DB:
+    """Local SQLite file, or a Postgres database when `database_url` is set in the secrets.
+    Queries are written once with ? placeholders and work on both."""
+    def __init__(self, url=None):
+        self.url, self.pg, self.lock, self.in_tx = url, bool(url), threading.RLock(), False
+        self._open()
+
+    def _open(self):
+        if self.pg:
+            import psycopg2
+            self.c = psycopg2.connect(self.url, connect_timeout=15)
+            self.c.autocommit = True   # reads need no transaction; writes open one explicitly
+            self.errors = (psycopg2.OperationalError, psycopg2.InterfaceError)
+        else:
+            self.c = sqlite3.connect(DB_PATH, check_same_thread=False)
+            self.errors = ()
+
+    @staticmethod
+    def _plain(v):
+        return v.item() if hasattr(v,"item") and not isinstance(v,(bytes,str)) else v   # numpy -> python
+
+    def execute(self, sql, params=()):
+        params = tuple(self._plain(v) for v in params)
+        with self.lock:
+            if self.pg:
+                sql = sql.replace("?","%s")
+                write = not sql.lstrip().upper().startswith("SELECT")
+                try:
+                    cur = self.c.cursor()
+                    if write and not self.in_tx:
+                        cur.execute("BEGIN"); self.in_tx = True
+                    cur.execute(sql, params)
+                    return cur
+                except self.errors:
+                    if self.in_tx: raise
+                    self._open()   # connection dropped while idle: reconnect once
+                    cur = self.c.cursor(); cur.execute(sql, params); return cur
+                except Exception:
+                    self.rollback(); raise
+            return self.c.execute(sql, params)
+
+    def commit(self):
+        with self.lock:
+            if not self.pg: self.c.commit()
+            elif self.in_tx:
+                self.c.cursor().execute("COMMIT"); self.in_tx = False
+
+    def rollback(self):
+        with self.lock:
+            if not self.pg: self.c.rollback()
+            elif self.in_tx:
+                try: self.c.cursor().execute("ROLLBACK")
+                except Exception: pass
+                self.in_tx = False
+
+    def df(self, sql, params=()):
+        cur = self.execute(sql, params)
+        return pd.DataFrame(cur.fetchall(), columns=[d[0] for d in cur.description])
+
+    def setup(self):
+        real, blob = ("DOUBLE PRECISION","BYTEA") if self.pg else ("REAL","BLOB")
+        for ddl in [
+            f"""CREATE TABLE IF NOT EXISTS inventory(
+                sku TEXT PRIMARY KEY, product TEXT, category TEXT, qty INTEGER,
+                buy_price {real}, sell_price {real}, image TEXT, new INTEGER DEFAULT 0)""",
+            f"""CREATE TABLE IF NOT EXISTS sales(
+                order_id TEXT PRIMARY KEY, created_at TEXT, payment_method TEXT,
+                subtotal {real}, discount {real}, total {real}, cost {real}, profit {real})""",
+            f"""CREATE TABLE IF NOT EXISTS sale_items(
+                order_id TEXT, sku TEXT, product TEXT, qty INTEGER,
+                sell_price {real}, buy_price {real}, line_total {real}, line_profit {real}, line_no INTEGER)""",
+            "CREATE TABLE IF NOT EXISTS cash_drawer(denom INTEGER PRIMARY KEY, count INTEGER NOT NULL DEFAULT 0)",
+            # one row per denomination moved in a sale: delta > 0 received from customer, delta < 0 given as change
+            "CREATE TABLE IF NOT EXISTS cash_moves(order_id TEXT, denom INTEGER, delta INTEGER)",
+            f"CREATE TABLE IF NOT EXISTS photos(sku TEXT PRIMARY KEY, data {blob}, updated TEXT)",
+            "CREATE TABLE IF NOT EXISTS backups(created_at TEXT, reason TEXT, payload TEXT)",
+        ]:
+            self.execute(ddl)
+        if not self.pg and "line_no" not in [r[1] for r in self.execute("PRAGMA table_info(sale_items)").fetchall()]:
+            self.execute("ALTER TABLE sale_items ADD COLUMN line_no INTEGER")   # databases made before line numbers
+        self.commit()
+
+@st.cache_resource(show_spinner="Connecting to the database…")
+def get_db(url):
+    d = DB(url)
+    d.setup()
+    return d
+
+conn = get_db(secret("database_url"))
 
 def seed_if_empty():
     if conn.execute("SELECT COUNT(*) FROM inventory").fetchone()[0] == 0:
@@ -158,6 +235,8 @@ def seed_if_empty():
         conn.commit()
 seed_if_empty()
 
+_run = {}   # per page-load cache
+
 if "cart" not in st.session_state:
     st.session_state.cart = {}
 
@@ -167,16 +246,33 @@ def money(v):
 def pct(part, whole):
     return f"{(part/whole*100 if whole else 0):.0f}%"
 
-@st.cache_data(show_spinner=False)
-def _thumb(path, mtime, size):
-    im = ImageOps.exif_transpose(Image.open(path))
+def _to_uri(src, size):
+    im = ImageOps.exif_transpose(Image.open(src))
     im.thumbnail((size,size))
     buf = io.BytesIO()
     im.convert("RGB").save(buf,"JPEG",quality=82)
     return "data:image/jpeg;base64,"+base64.b64encode(buf.getvalue()).decode()
 
-def thumb(rel, size=160):
+@st.cache_data(show_spinner=False)
+def _thumb(path, mtime, size):
+    return _to_uri(path,size)
+
+@st.cache_data(show_spinner=False)
+def _db_thumb(sku, updated, size):
+    row = conn.execute("SELECT data FROM photos WHERE sku=?",(sku,)).fetchone()
+    return _to_uri(io.BytesIO(bytes(row[0])),size) if row else None
+
+def photo_index():
+    """sku -> last-updated stamp for every photo uploaded in the app (read once per page load)."""
+    if "_photos" not in _run:
+        _run["_photos"] = dict(conn.execute("SELECT sku,updated FROM photos").fetchall())
+    return _run["_photos"]
+
+def thumb(sku, rel, size=160):
     """Small data-URI version of a product photo, or None if there is no photo yet."""
+    if sku in photo_index():
+        try: return _db_thumb(sku,photo_index()[sku],size)
+        except Exception: return None
     if rel is None or pd.isna(rel) or not str(rel): return None
     p = APP_DIR/str(rel)
     if not p.exists():
@@ -186,8 +282,8 @@ def thumb(rel, size=160):
     try: return _thumb(str(p),p.stat().st_mtime,size)
     except Exception: return None
 
-def img_tag(rel, size=160, placeholder="NO PHOTO"):
-    src = thumb(rel,size)
+def img_tag(sku, rel, size=160, placeholder="NO PHOTO"):
+    src = thumb(sku,rel,size)
     return f'<img src="{src}">' if src else placeholder
 
 def drawer():
@@ -196,11 +292,13 @@ def drawer():
 
 def bump_drawer(denom, n):
     conn.execute("""INSERT INTO cash_drawer(denom,count) VALUES(?,?)
-                    ON CONFLICT(denom) DO UPDATE SET count=MAX(0,count+?)""",(denom,max(0,n),n))
+                    ON CONFLICT(denom) DO UPDATE SET count=CASE WHEN cash_drawer.count+?<0 THEN 0
+                                                               ELSE cash_drawer.count+? END""",(denom,max(0,n),n,n))
 
 def set_drawer(counts):
     for k,v in counts.items():
-        conn.execute("INSERT OR REPLACE INTO cash_drawer(denom,count) VALUES(?,?)",(k,int(v)))
+        conn.execute("""INSERT INTO cash_drawer(denom,count) VALUES(?,?)
+                        ON CONFLICT(denom) DO UPDATE SET count=excluded.count""",(k,int(v)))
     conn.commit()
 
 def cash_value(counts):
@@ -237,7 +335,11 @@ def change_options(amount, avail):
     return target, [opts[0]]+sorted(opts[1:],key=lambda o: sum(o.values()))[:2]
 
 def inv():
-    return pd.read_sql_query("SELECT * FROM inventory ORDER BY CAST(substr(sku,5) AS INTEGER)", conn)
+    if "inv" not in _run:
+        d=conn.df("SELECT * FROM inventory")
+        num=d.sku.str.extract(r"(\d+)$")[0].astype(float)
+        _run["inv"]=d.assign(_n=num).sort_values(["_n","sku"]).drop(columns="_n").reset_index(drop=True)
+    return _run["inv"].copy()
 
 def add(sku):
     stock = conn.execute("SELECT qty FROM inventory WHERE sku=?", (sku,)).fetchone()
@@ -271,18 +373,20 @@ def finish_sale(payment, discount, cash_in=None, cash_out=None):
     total=subtotal-discount
     cost=float((c.qty*c.buy_price).sum())
     profit=total-cost
-    oid="TGA-"+datetime.now().strftime("%y%m%d")+"-"+uuid.uuid4().hex[:4].upper()
-    now=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    conn.execute("INSERT INTO sales VALUES(?,?,?,?,?,?,?,?)",(oid,now,payment,subtotal,discount,total,cost,profit))
-    for _,r in c.iterrows():
-        conn.execute("INSERT INTO sale_items VALUES(?,?,?,?,?,?,?,?)",
-            (oid,r.sku,r['product'],int(r.qty),r.sell_price,r.buy_price,r.line_total,r.line_profit))
+    oid="TGA-"+datetime.now(TZ).strftime("%y%m%d")+"-"+uuid.uuid4().hex[:4].upper()
+    now=datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S")
+    conn.execute("""INSERT INTO sales(order_id,created_at,payment_method,subtotal,discount,total,cost,profit)
+                    VALUES(?,?,?,?,?,?,?,?)""",(oid,now,payment,subtotal,discount,total,cost,profit))
+    for n,(_,r) in enumerate(c.iterrows()):
+        conn.execute("""INSERT INTO sale_items(order_id,sku,product,qty,sell_price,buy_price,line_total,line_profit,line_no)
+                        VALUES(?,?,?,?,?,?,?,?,?)""",
+            (oid,r.sku,r['product'],int(r.qty),r.sell_price,r.buy_price,r.line_total,r.line_profit,n))
         conn.execute("UPDATE inventory SET qty=qty-? WHERE sku=?",(int(r.qty),r.sku))
     for sign,counts in ((1,cash_in or {}),(-1,cash_out or {})):
         for dn,n in counts.items():
             if n:
                 bump_drawer(dn,sign*n)
-                conn.execute("INSERT INTO cash_moves VALUES(?,?,?)",(oid,dn,sign*n))
+                conn.execute("INSERT INTO cash_moves(order_id,denom,delta) VALUES(?,?,?)",(oid,dn,sign*n))
     conn.commit()
     st.session_state.cart={}
     return True,oid
@@ -330,21 +434,24 @@ def save_inventory(old, edited):
     return True, f"Saved • {added} added • {len(removed)} removed • {len(e)} products in stock list"
 
 def save_photo(sku, file):
-    """Store an uploaded photo as images/<SKU>.jpg and point the product at it."""
+    """Store an uploaded photo in the database, so it survives restarts of a hosted app."""
     im=ImageOps.exif_transpose(Image.open(file))
-    im.thumbnail((1400,1400))
-    IMG_DIR.mkdir(exist_ok=True)
-    rel=f"images/{re.sub(r'[^A-Za-z0-9_-]','_',sku)}.jpg"
-    im.convert("RGB").save(APP_DIR/rel,"JPEG",quality=88)
-    conn.execute("UPDATE inventory SET image=? WHERE sku=?",(rel,sku))
+    im.thumbnail((1000,1000))
+    buf=io.BytesIO()
+    im.convert("RGB").save(buf,"JPEG",quality=85)
+    conn.execute("""INSERT INTO photos(sku,data,updated) VALUES(?,?,?)
+                    ON CONFLICT(sku) DO UPDATE SET data=excluded.data, updated=excluded.updated""",
+                 (sku,buf.getvalue(),datetime.now(TZ).isoformat()))
     conn.commit()
 
-def backup_db():
+def backup_db(reason):
+    """Snapshot of every table except photos, kept in the backups table."""
+    payload={t:conn.df(f"SELECT * FROM {t}").to_dict("records")
+             for t in ["inventory","sales","sale_items","cash_drawer","cash_moves"]}
+    stamp=datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S")
+    conn.execute("INSERT INTO backups VALUES(?,?,?)",(stamp,reason,json.dumps(payload,default=str)))
     conn.commit()
-    d=APP_DIR/"backups"; d.mkdir(exist_ok=True)
-    dest=d/f"golden_affair_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
-    shutil.copy2(DB_PATH,dest)
-    return dest.name
+    return stamp
 
 def cancel_orders(order_ids):
     """Delete these sales and put the sold quantities back into stock."""
@@ -374,7 +481,7 @@ def order_card(s, lines, cash=None):
     rows=""
     for _,r in lines.iterrows():
         cat="" if pd.isna(r.category) else f" • {html.escape(str(r.category))}"
-        rows+=(f'<div class="oitem"><div class="othumb">{img_tag(r.image,140)}</div>'
+        rows+=(f'<div class="oitem"><div class="othumb">{img_tag(r.sku,r.image,140)}</div>'
                f'<div class="oname">{html.escape(str(r["product"]))}<small>{html.escape(str(r.sku))}{cat}</small></div>'
                f'<div class="oqty">{int(r.qty)} × {money(r.sell_price)}</div>'
                f'<div class="oline">{money(r.line_total)}</div></div>')
@@ -390,22 +497,22 @@ def order_card(s, lines, cash=None):
 RUPEE=dict(format="₹%.0f")
 
 # Header
-now=datetime.now()
+now=datetime.now(TZ)
 today=now.strftime("%Y-%m-%d")
 st.markdown('<div class="topbar"><div><div class="brand">The Golden Affair</div>'
             '<div class="sub">Exhibition • Billing, Stock &amp; Profit</div></div>'
             f'<div class="today"><b>{now.strftime("%A, %d %B %Y")}</b>Exhibition counter</div></div>',
             unsafe_allow_html=True)
 
-sales_df=pd.read_sql_query("SELECT * FROM sales ORDER BY created_at DESC",conn)
-items_df=pd.read_sql_query("""SELECT si.rowid AS line_no, si.*, s.created_at, s.payment_method, i.image, i.category
-                              FROM sale_items si JOIN sales s ON s.order_id=si.order_id
-                              LEFT JOIN inventory i ON i.sku=si.sku ORDER BY si.rowid DESC""",conn)
+sales_df=conn.df("SELECT * FROM sales ORDER BY created_at DESC")
+items_df=conn.df("""SELECT si.*, s.created_at, s.payment_method, i.image, i.category
+                    FROM sale_items si JOIN sales s ON s.order_id=si.order_id
+                    LEFT JOIN inventory i ON i.sku=si.sku ORDER BY s.created_at DESC, si.line_no""")
 sales_df["day"]=sales_df.created_at.str[:10]
 items_df["day"]=items_df.created_at.str[:10]
 items_df["line_cost"]=items_df.qty*items_df.buy_price
 
-cash_df=pd.read_sql_query("SELECT * FROM cash_moves",conn)
+cash_df=conn.df("SELECT * FROM cash_moves")
 cash_df["amount"]=cash_df.denom*cash_df.delta
 cash_info={k:(int(g.amount[g.delta>0].sum()),int(-g.amount[g.delta<0].sum())) for k,g in cash_df.groupby("order_id")}
 
@@ -475,7 +582,7 @@ if page==PAGES[0]:
                     cls="low" if r.qty<=LOW_STOCK else ""
                     stock=f"{int(r.qty)} in stock" if r.qty>0 else "Out of stock"
                     st.markdown(
-                        f'<div class="pimg">{img_tag(r.image,420,"ADD IMAGE")}{badge}</div>'
+                        f'<div class="pimg">{img_tag(r.sku,r.image,420,"ADD IMAGE")}{badge}</div>'
                         f'<div class="pname">{html.escape(str(r["product"]))}</div>'
                         f'<div class="pmeta">{html.escape(r.sku)} • {html.escape(str(r.category))}</div>'
                         f'<div class="prow"><span class="price">{money(r.sell_price) if r.sell_price>0 else "No price"}</span>'
@@ -648,7 +755,7 @@ if page==PAGES[2]:
                             for o in s.head(MAX_ORDERS).itertuples()),unsafe_allow_html=True)
     else:
         t=hits.copy()
-        t["photo"]=t.image.map(lambda v: thumb(v,140))
+        t["photo"]=[thumb(k,v,140) for k,v in zip(t.sku,t.image)]
         t["time"]=pd.to_datetime(t.created_at).dt.strftime("%d %b, %I:%M %p")
         st.dataframe(
             t[["photo","product","sku","category","qty","sell_price","line_total","line_cost","line_profit","payment_method","time","order_id"]],
@@ -671,7 +778,7 @@ if page==PAGES[3]:
     i["stock_retail"]=i.qty*i.sell_price
     i["margin"]=i.sell_price-i.buy_price
     i["margin_pct"]=(i.margin/i.sell_price.where(i.sell_price>0)*100).fillna(0)
-    i["photo"]=i.image.map(lambda v: thumb(v,140))
+    i["photo"]=[thumb(k,v,140) for k,v in zip(i.sku,i.image)]
     low=i[i.qty<=0]
     k1,k2,k3,k4,k5,k6=st.columns(6)
     k1.metric("Products",len(i))
@@ -753,7 +860,7 @@ if page==PAGES[3]:
             names=i.set_index("sku")["product"]
             psku=st.selectbox("Product",opts.sku.tolist(),format_func=lambda k: f"{k} — {names[k]}",key="photo_sku")
             if psku:
-                st.markdown(f'<div class="pimg" style="width:150px">{img_tag(i.set_index("sku").image[psku],300,"NO PHOTO YET")}</div>',
+                st.markdown(f'<div class="pimg" style="width:150px">{img_tag(psku,i.set_index("sku").image[psku],300,"NO PHOTO YET")}</div>',
                             unsafe_allow_html=True)
                 up=st.file_uploader("Choose a photo",type=IMG_TYPES,key=f"photo_one_{pv}")
                 if st.toggle("Take a photo with the camera instead",key="photo_cam"):
@@ -836,7 +943,7 @@ if page==PAGES[4]:
         st.markdown('<div class="section">Best sellers</div>',unsafe_allow_html=True)
         best=summarise(["sku","product"])
         imgs=items_df.drop_duplicates("sku").set_index("sku").image
-        best.insert(0,"photo",best.sku.map(lambda k: thumb(imgs.get(k),140)))
+        best.insert(0,"photo",best.sku.map(lambda k: thumb(k,imgs.get(k),140)))
         st.dataframe(best,use_container_width=True,hide_index=True,column_config=REP_COLS,row_height=56)
 
         st.markdown('<div class="section">Day-wise summary</div>',unsafe_allow_html=True)
@@ -856,7 +963,7 @@ if page==PAGES[4]:
 if page==PAGES[5]:
     if st.session_state.get("reset_msg"):
         st.success(st.session_state.pop("reset_msg"))
-    st.caption("Use these to clean up after testing. A backup copy of the data is saved in the backups folder before anything is removed.")
+    st.caption("Use these to clean up after testing. A backup snapshot of the data is saved inside the app before anything is removed.")
     c0,c1,c2=st.columns(3,gap="large")
     with c0:
         st.markdown('<div class="section">Reset everything</div>',unsafe_allow_html=True)
@@ -866,10 +973,10 @@ if page==PAGES[5]:
                  "Cash from those sales is taken back out of the drawer count.")
         sure0=st.checkbox("Yes, reset everything",key="resetall_sure")
         if st.button("♻️ Reset sales & stock",type="primary",disabled=not sure0,use_container_width=True,key="resetall_go"):
-            b=backup_db()
+            b=backup_db("reset everything")
             reset_everything()
             st.session_state.cart={}
-            st.session_state.reset_msg=f"Everything reset: no sales, original stock list • backup saved as backups/{b}"
+            st.session_state.reset_msg=f"Everything reset: no sales, original stock list • backup saved ({b})"
             st.session_state.pop("resetall_sure",None)
             st.rerun()
     with c1:
@@ -879,9 +986,9 @@ if page==PAGES[5]:
         st.write(f"Removes **{len(target)} orders** worth {money(target.total.sum())} and puts the sold items back into stock. Your stock and price edits are kept, and the cash drawer is put back too.")
         sure=st.checkbox("Yes, remove these sales",key="reset_sure")
         if st.button("🗑 Clear sales & restore stock",disabled=not sure or target.empty,use_container_width=True,key="reset_go"):
-            b=backup_db()
+            b=backup_db("clear sales")
             cancel_orders(target.order_id.tolist())
-            st.session_state.reset_msg=f"{len(target)} orders removed and their stock restored • backup saved as backups/{b}"
+            st.session_state.reset_msg=f"{len(target)} orders removed and their stock restored • backup saved ({b})"
             st.session_state.pop("reset_sure",None)
             st.rerun()
     with c2:
@@ -896,8 +1003,8 @@ if page==PAGES[5]:
             st.write("Removes this order and puts its items back into stock.")
             sure1=st.checkbox("Yes, cancel this sale",key="cancel_sure")
             if st.button("Cancel this sale",disabled=not sure1,use_container_width=True,key="cancel_go"):
-                b=backup_db()
+                b=backup_db(f"cancel {oid}")
                 cancel_orders([oid])
-                st.session_state.reset_msg=f"Order {oid} cancelled and its stock restored • backup saved as backups/{b}"
+                st.session_state.reset_msg=f"Order {oid} cancelled and its stock restored • backup saved ({b})"
                 st.session_state.pop("cancel_sure",None)
                 st.rerun()
